@@ -6,6 +6,7 @@ import asyncio
 
 
 async def order_parser_scheduler():
+    # TODO: make custom scheduler as i did before
     parser.check_for_new_orders()
     await asyncio.sleep(ORDERS_UPDATE_DELAY_SECONDS)
 
