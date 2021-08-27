@@ -19,7 +19,6 @@ async def main():
     await order_parser_scheduler()
     await bot_server.process()
     asyncio.ensure_future(main())
-    print("Repeat")
 
 
 loop = asyncio.get_event_loop()
