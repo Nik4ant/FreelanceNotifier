@@ -11,7 +11,7 @@ import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType, VkBotMessageEvent, VkBotEvent
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
-from vk_api.vk_api import VkApi  # for type hint
+from vk_api.vk_api import VkApiMethod  # for type hint
 
 
 # TODO: write docs for this class + it's methods
@@ -19,7 +19,7 @@ class BotServer:
     def __init__(self, token: str, group_id: int):
         self.vk_session = vk_api.VkApi(token=token)
         self.longpoll = VkBotLongPoll(self.vk_session, group_id)
-        self.vk: VkApi = self.vk_session.get_api()
+        self.vk: VkApiMethod = self.vk_session.get_api()
         # Last contacted user
         self.last_user_id = self.vk.messages.getConversations()["items"][0]["conversation"]["peer"]["id"]
 
@@ -45,13 +45,9 @@ class BotServer:
                                     peer_id=event.object.peer_id,
                                     event_data=ujson.dumps(event.object.payload))
                     elif payload_type == "delete_message":
-                        # TODO: maybe run_in_executor if needed
-                        # FIXME: I have no idea why this is not working
-                        response = self.vk.method("messages.delete", {
-                            "peer_id": event.object.peer_id,
-                            "delete_for_all": 1,
-                            "conversation_message_ids": (event.object.conversation_message_id, )
-                        })
+                        self.vk.messages.delete(peer_id=event.object.peer_id,
+                                                delete_for_all=True,
+                                                conversation_message_ids=event.object.conversation_message_id)
 
         # Note(Nik4ant): Timeout exception will be raised only if there is no events (tested)
         except asyncio.exceptions.TimeoutError:

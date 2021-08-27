@@ -29,4 +29,6 @@ class OrdersParser:
 
     def update_orders(self) -> None:
         # TODO: write real parser there is only placeholder yet
-        self.orders_queue.append(OrderContainer("Точно не рикролл", "https://youtu.be/dQw4w9WgXcQ"))
+        self.orders_queue.append(OrderContainer(f"1", "https://youtu.be/dQw4w9WgXcQ"))
+        self.orders_queue.append(OrderContainer(f"2", "https://youtu.be/dQw4w9WgXcQ"))
+        self.orders_queue.append(OrderContainer(f"3", "https://youtu.be/dQw4w9WgXcQ"))
