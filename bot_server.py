@@ -24,7 +24,7 @@ class BotServer:
         self.last_user_id = self.vk.messages.getConversations()["items"][0]["conversation"]["peer"]["id"]
 
     async def process(self):
-        # Note(Nik4ant): Without this code would be 25 seconds delay because check blocks event loop
+        # Note(Nik4ant): Without this code would be 25 seconds delay because vk_api method blocks event loop
         try:
             current_loop = asyncio.get_running_loop()
             # Note(Nik4ant): Executor param is None, because asyncio will use default executor
@@ -75,7 +75,7 @@ class BotServer:
                                            payload={
                                                "type": "delete_message"
                                            })
-        self.send_message(f"Найден заказ ({datetime.now().strftime('%H:%M %d.%m')}):\n{order.text}",
+        self.send_message(f"Найден заказ ({datetime.now().strftime('%H:%M %d.%m')}):\n{order}",
                           user_id, order_keyboard)
 
     def send_message(self, message_text: str, user_id: int, keyboard: VkKeyboard = None):

@@ -12,7 +12,7 @@ async def order_parser_scheduler() -> None:
     if (global_time_since_orders_update is None or
             time.time() - global_time_since_orders_update >= ORDERS_UPDATE_DELAY_SECONDS):
         global_time_since_orders_update = time.time()
-        parser.check_for_new_orders()
+        await parser.check_for_new_orders()
 
 
 async def main():
