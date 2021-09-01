@@ -23,7 +23,9 @@ class OrderContainer:
         self.description = re.sub("\n{2,}", '\n', self.description)
 
     def __str__(self):
-        return f"{self.title}\n{self.description}\n\n{self.url}\nMin: {self.min_price}\nMax: {self.max_price}"
+        if self.max_price:
+            return f"{self.title}\n{self.description}\n\n{self.url}\nMin: {self.min_price}\nMax: {self.max_price}"
+        return f"{self.title}\n{self.description}\n\n{self.url}\nMin: {self.min_price}\n"
 
 
 # TODO: add support for multiple web sites with orders (but for now this works fine)
@@ -91,20 +93,25 @@ class OrdersParser:
                     # Other order data
                     order_url = title_tag.attrs.get("href") + "/view"
                     # Description can be small (fully visible) and big (not fully visible).
-                    # These creates 2 different html hierarchy. THis one is for big description
+                    # These creates 2 different html hierarchy. This one is for big description
                     description_tag = order_tag.select_one("div.mb15 div.d-flex.relative div.wants-card__left div.wants-card__description-text.br-with-lh div.breakwords.first-letter.js-want-block-toggle.js-want-block-toggle-full")
                     # If tag is None then order has small description that parsing differently
                     if description_tag is None:
-                        description_tag = order_tag.select_one("div.mb15 > div.d-flex.relative > div.wants-card__left > div.wants-card__description-text.br-with-lh > div")
+                        description_tag = order_tag.select_one("div.mb15 div.d-flex.relative div.wants-card__left div.wants-card__description-text.br-with-lh div")
                     description = description_tag.text.rstrip(" Скрыть")
-                    # TODO: fix price it's not working
-                    min_price = ''.join(soup.select_one("div.mb15 div.d-flex.relative div.wants-card__right.m-hidden div div div").text.split()[3:5])
-                    # This tag doesn't appear every time so need to check for it
-                    max_price = ''.join(soup.select_one("div.mb15 div.d-flex.relative div.wants-card__right.m-hidden div.wants-card__description-higher-price span.nowrap").text.split()[1:3])
+                    # Note: This tag doesn't appear every time
+                    max_price_tag = order_tag.select_one("div.mb15 div.d-flex.relative div.wants-card__right.m-hidden div.wants-card__description-higher-price span.nowrap")
+                    if max_price_tag is None:
+                        max_price = ""
+                    else:
+                        # Extracting max price from string with price info
+                        max_price = self._format_price_string(max_price_tag.text)
+                    # Extracting min price from string with price info
+                    min_price = self._format_price_string(order_tag.select_one("div.mb15 div.d-flex.relative div.wants-card__right.m-hidden div div div").text)
                     self.orders_deque.append(OrderContainer(title, description, order_url, min_price, max_price))
                 # Parsing how many pages we have if parser don't know it yet
                 if max_pages_count is None:
-                    # Note(Nik4ant): This isn't best way for selecting last page num, but it works
+                    # Note(Nik4ant): I think this isn't best way for selecting last page num, but it works
                     pages_tag = soup.select_one("div[class='p1']").findChild()
                     max_pages_count = int(pages_tag.select("li")[-2].findChild().text)
                 # Incrementing page num
@@ -113,6 +120,16 @@ class OrdersParser:
                     break
             # Updating last title for current category
             self.last_order_titles[current_category] = new_title
+
+    @staticmethod
+    def _format_price_string(line: str) -> str:
+        """
+        Method that takes only digits from line with price info. Useful, because
+        there are a lot of different prefixes for line with price info.
+        :param line: Text line with price info
+        :return: Price (nums only)
+        """
+        return ''.join([char for char in line if char.isdigit()])
 
     @staticmethod
     async def get_html_page(url: str) -> Union[Any, bytes]:
