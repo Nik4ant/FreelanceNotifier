@@ -52,8 +52,6 @@ class BotServer:
         # Note(Nik4ant): Timeout exception will be raised only if there is no events (tested)
         except asyncio.exceptions.TimeoutError:
             pass
-        # TODO: test if i needed this
-        await asyncio.sleep(0)
 
     def check_for_events(self) -> Union[List[Union[VkBotMessageEvent, VkBotEvent]], List]:
         return self.longpoll.check()
