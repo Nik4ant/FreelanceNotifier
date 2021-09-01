@@ -3,18 +3,16 @@ from orders_parser import OrderContainer
 
 import asyncio
 from datetime import datetime
-from typing import Union, List
 
 import ujson
 import vk_api
 # last two for type hints
-from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType, VkBotMessageEvent, VkBotEvent
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
 from vk_api.vk_api import VkApiMethod  # for type hint
 
 
-# TODO: write docs for this class + it's methods
 class BotServer:
     def __init__(self, token: str, group_id: int):
         self.vk_session = vk_api.VkApi(token=token)
@@ -28,7 +26,7 @@ class BotServer:
         try:
             current_loop = asyncio.get_running_loop()
             # Note(Nik4ant): Executor param is None, because asyncio will use default executor
-            events = await asyncio.wait_for(current_loop.run_in_executor(None, self.check_for_events),
+            events = await asyncio.wait_for(current_loop.run_in_executor(None, self.longpoll.check),
                                             timeout=EVENT_CHECK_TIMEOUT)
             # Handling events
             for event in events:
@@ -48,13 +46,9 @@ class BotServer:
                         self.vk.messages.delete(peer_id=event.object.peer_id,
                                                 delete_for_all=True,
                                                 conversation_message_ids=event.object.conversation_message_id)
-
         # Note(Nik4ant): Timeout exception will be raised only if there is no events (tested)
         except asyncio.exceptions.TimeoutError:
             pass
-
-    def check_for_events(self) -> Union[List[Union[VkBotMessageEvent, VkBotEvent]], List]:
-        return self.longpoll.check()
 
     def new_order_handler(self, order):
         self.show_order_info(order, self.last_user_id)
